@@ -1,0 +1,18 @@
+S'->S
+S->int A
+A->main l_para r_para NL B N return 0 SC NL E
+A->main l_para r_para NL B C return v SC NL E
+B->begin NL
+E->end
+N->null
+C->int v SC NL D NL
+D->do NL X Y NL while l_para Q r_para SC
+X->Q opq Q opp Q SC NL
+Q->expr
+opq->=
+opp->+
+Y->v opq Q SC
+SC->;
+l_para->(
+r_para->)
+NL->\n
