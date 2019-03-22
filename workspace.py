@@ -3,13 +3,34 @@ from prototype import closure
 EPSILON = "e"
 
 # Temporary data
-terminals = ['+', 'e', '*', '(', ')', 'i', '$']
 grammar = ['E->TX', 'X->+TX', 'X->e', 'T->FY', 'Y->*FY', 'Y->e', 'F->(E)', 'F->i']
+symbols = []
+
+
+def get_symbols(grammar):
+    # Check the grammar and get the set of terminals and non_terminals
+    terminals = set()
+    non_terminals = set()
+    for production in grammar:
+        lhs, rhs = production.split('->')
+        # Set of non terminals only
+        non_terminals.add(lhs)
+        for x in rhs:
+            # Add add symbols to terminals
+            terminals.add(x)
+    # Remove the non terminals
+    terminals = terminals.difference(non_terminals)
+    return terminals, non_terminals
+
+
+terminals, non_terminals = get_symbols(grammar)
+symbols = terminals.union(non_terminals)
 
 
 def first(symbols):
     # Find the first of the symbol 'X' w.r.t the grammar
     final_set = []
+
     for X in symbols:
         first_set = []  # Will contain the final set first(X)
         if isTerminal(X):
@@ -59,7 +80,7 @@ def shift_dot(production):
     else:
         y = y[0]+"."+y[1:]
     rhs = "".join([x, y])
-    return "->", join([lhs, rhs])
+    return "->".join([lhs, rhs])
 
 
 def goto(I, X):
@@ -72,3 +93,19 @@ def goto(I, X):
             new_prod = shift_dot(production[i])
             J.append((new_prod, look_ahead[i]))
     return closure(J)
+
+
+def set_of_items():
+    # Function to construct the set of items
+    C = closure([('P->.S', '$')])
+    for I in C:
+        # For each items I in C
+        for X in symbols:
+            # For each grammar symbol X
+            goto_I_X = goto(I, X)
+            if not len(goto_I_X) == 0:
+                # If Goto(I,X) is not empty and not in C
+                if goto_I_X not in C:
+                    # Add Goto(I,X) to C
+                    C.extend(goto_I_X)
+    return C
