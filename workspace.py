@@ -1,15 +1,10 @@
+from prototype import closure
+
 EPSILON = "e"
 
 # Temporary data
 terminals = ['+', 'e', '*', '(', ')', 'i', '$']
 grammar = ['E->TX', 'X->+TX', 'X->e', 'T->FY', 'Y->*FY', 'Y->e', 'F->(E)', 'F->i']
-
-
-def find_look_ahead(beta_a):
-    first_beta_a = []
-    for symbol in beta_a:
-        first_beta_a.extend(first(symbol))
-    return first_beta_a
 
 
 def first(symbols):
@@ -50,8 +45,9 @@ def isTerminal(symbol):
     return symbol in terminals
 
 
-def shift_dot(rhs):
+def shift_dot(production):
     # This function shifts the dot to the right
+    lhs, rhs = '->'.split(production)
     print(rhs)
     x, y = rhs.split(".")
     if(len(y) == 0):
@@ -62,19 +58,17 @@ def shift_dot(rhs):
         y = y[0]+"."
     else:
         y = y[0]+"."+y[1:]
-    return "".join([x, y])
+    rhs = "".join([x, y])
+    return "->", join([lhs, rhs])
 
 
 def goto(I, X):
-    productions, look_aheads = zip(*I)
+    # Function to calculate GOTO
+    J = []
+    production, look_ahead = zip(*I)
     for i in len(I):
-
-
-first('XY')
-
-production = "X->e"
-production
-lhs, rhs = production.split('->')
-rhs = "."+rhs
-production = "->".join([lhs, rhs])
-production
+        if not production[i][-1] == '.':
+            # Check if the production ends with a dot, else shift dot
+            new_prod = shift_dot(production[i])
+            J.append((new_prod, look_ahead[i]))
+    return closure(J)
