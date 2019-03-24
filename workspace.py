@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 EPSILON = "e"
 
@@ -133,21 +134,6 @@ def goto(I, X):
     return closure(J)
 
 
-def pending_shifts(I):
-    # This function will check which symbols are to be shifted in I
-    symbols = []  # Will contain the symbols in order of evaluation
-    for production, _ in I:
-        lhs, rhs = production.split('->')
-        if rhs.endswith('.'):
-            # dot is at the end of production. Hence, ignore it
-            continue
-        # beta is the first symbol after the dot
-        beta = rhs.split('.')[1][0]
-        if beta not in symbols:
-            symbols.append(beta)
-    return symbols
-
-
 def set_of_items(display=False):
     # Function to construct the set of items
     num_states = 1
@@ -171,31 +157,96 @@ def set_of_items(display=False):
     return items
 
 
-def CLR_construction(grammar):
-    C = set_of_items()
-    # Construction ACTION function
-    pass
+def pending_shifts(I):
+    # This function will check which symbols are to be shifted in I
+    symbols = []  # Will contain the symbols in order of evaluation
+    for production, _ in I:
+        lhs, rhs = production.split('->')
+        if rhs.endswith('.'):
+            # dot is at the end of production. Hence, ignore it
+            continue
+        # beta is the first symbol after the dot
+        beta = rhs.split('.')[1][0]
+        if beta not in symbols:
+            symbols.append(beta)
+    return symbols
+
+
+def done_shifts(I):
+    done = []
+    for production, look_ahead in I:
+        if production.endswith('.') and production != 'P->S.':
+            done.append((production[:-1], look_ahead))
+    return done
+
+
+done_shifts(C['I4'])
+
+
+def get_state(C, I):
+    # This function returns the State name, given a set of items.
+    key_list = list(C.keys())
+    val_list = list(C.values())
+    i = val_list.index(I)
+    return key_list[i]
+
+
+def CLR_construction(num_states):
+    # Function that returns the CLR Parsing Table function ACTION and GOTO
+    C = set_of_items()  # Construct collection of sets of LR(1) items
+
+    # Initialize two tables for ACTION and GOTO respectively
+    ACTION = pd.DataFrame(columns=terminals, index=range(num_states))
+    GOTO = pd.DataFrame(columns=non_terminals, index=range(num_states))
+
+    for Ii in C.values():
+        # For each state in the collection
+        i = int(get_state(C, Ii)[1:])
+        pending = pending_shifts(Ii)
+        for a in pending:
+            # For each symbol 'a' after the dots
+            Ij = goto(Ii, a)
+            j = int(get_state(C, Ij)[1:])
+            if isTerminal(a):
+                # Construct the ACTION function
+                ACTION.at[i, a] = "Shift "+str(j)
+            else:
+                # Construct the GOTO function
+                GOTO.at[i, a] = j
+
+        # For each production with dot at the end
+        for production, look_ahead in done_shifts(Ii):
+            # Set GOTO[I, a] to "Reduce"
+            ACTION.at[i, look_ahead] = "Reduce " + str(grammar.index(production)+1)
+
+        # If start production is in Ii
+        if ('P->S.', '$') in Ii:
+            ACTION.at[i, '$'] = "Accept"
+
+    # Remove the default NaN values to make it clean
+    ACTION.replace(np.nan, '', regex=True, inplace=True)
+    GOTO.replace(np.nan, '', regex=True, inplace=True)
+
+    return ACTION, GOTO
 
 
 if __name__ == "__main__":
 
     # Demo grammars
-    grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
-    # grammar = ['S->CC', 'C->cC', 'C->d']
+    # grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
+    grammar = ['S->CC', 'C->cC', 'C->d']
     # grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
 
     terminals, non_terminals = get_symbols(grammar)
     symbols = terminals.union(non_terminals)
-
-    # ACTION = pd.DataFrame(columns=terminals)
-    # GOTO = pd.DataFrame(columns=non_terminals)
 
     # Demonstrating main functions
     first('L')
     start = [('P->.S', '$')]
     I0 = closure(start)
     goto(I0, '*')
-    C = set_of_items(display=True)
+    C = set_of_items()
+    ACTION, GOTO = CLR_construction(num_states=len(C))
 
     # Demonstrating helper functions:
     get_productions('L')
