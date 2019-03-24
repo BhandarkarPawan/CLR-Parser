@@ -12,10 +12,8 @@ def closure(I):
     productions = list(productions)
     look_ahead = list(look_ahead)
     for item in productions:
-        lhs, rhs = 0, 0
         lhs, rhs = item.split('.')
         nextProduction = rhs[0]
-        lhs, rhs = 0, 0
         lhs, rhs = item.split(nextProduction)
         tempString = ""
         tempString = tempString.join(look_ahead)

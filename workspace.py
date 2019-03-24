@@ -34,6 +34,59 @@ def closure(I):
     return I
 
 
+items = dict()
+
+
+def get_productions(X):
+    productions = []
+    for prod in grammar:
+        lhs, rhs = prod.split('->')
+        if lhs == X:
+            rhs = '.'+rhs
+            productions.append('->'.join([lhs, rhs]))
+    return productions
+
+
+def closure(I):
+    for production, a in I:
+        # look_ahead = '|'.split(look_ahead)
+        lhs, rhs = production.split('->')
+        alpha, B_beta = rhs.split('.')
+        B = B_beta[0]
+        beta = B_beta[1:]
+        # for a in look_ahead:
+        beta_a = beta + a
+        first_beta_a = first(beta_a)
+        for b in first_beta_a:
+            B_productions = get_productions(B)
+            for gamma in B_productions:
+                new_item = (gamma, b)
+                if (new_item not in I):
+                    I.append(new_item)
+    return I
+
+
+production, a = 'P->.S', '$'
+'S->.R', '$'
+'R->.L', '$'
+'L->.*R', '$'
+'L->.i', '$'
+
+
+production = 'L->.*R'
+a = '$'
+
+I = [('P->.S', '$')]
+
+grammar = ['S->L=R',
+           'S->R',
+           'L->*R',
+           'L->i',
+           'R->L']
+
+closure(I)
+
+
 def get_symbols(grammar):
     # Check the grammar and get the set of terminals and non_terminals
     terminals = set()
@@ -85,6 +138,9 @@ def first(symbols):
     return list(set(final_set))
 
 
+first('YX')
+
+
 def isTerminal(symbol):
     # This function will return if the symbol is a terminal or not
     return symbol in terminals
@@ -104,6 +160,9 @@ def shift_dot(production):
         y = y[0]+"."+y[1:]
     rhs = "".join([x, y])
     return "->".join([lhs, rhs])
+
+
+shift_dot('P->AB.c')
 
 
 def goto(I, X):
