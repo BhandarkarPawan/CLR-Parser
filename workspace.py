@@ -1,10 +1,37 @@
-from prototype import closure
+import pandas as pd
 
 EPSILON = "e"
 
-# Temporary data
-grammar = ['E->TX', 'X->+TX', 'X->e', 'T->FY', 'Y->*FY', 'Y->e', 'F->(E)', 'F->i']
-symbols = []
+
+def get_productions(X):
+    productions = []
+    for prod in grammar:
+        lhs, rhs = prod.split('->')
+        if lhs == X:
+            rhs = '.'+rhs
+            productions.append('->'.join([lhs, rhs]))
+    return productions
+
+
+def closure(I):
+    for production, a in I:
+        if production.endswith("."):
+            continue
+        # look_ahead = '|'.split(look_ahead)
+        lhs, rhs = production.split('->')
+        alpha, B_beta = rhs.split('.')
+        B = B_beta[0]
+        beta = B_beta[1:]
+        # for a in look_ahead:
+        beta_a = beta + a
+        first_beta_a = first(beta_a)
+        for b in first_beta_a:
+            B_productions = get_productions(B)
+            for gamma in B_productions:
+                new_item = (gamma, b)
+                if (new_item not in I):
+                    I.append(new_item)
+    return I
 
 
 def get_symbols(grammar):
@@ -20,11 +47,8 @@ def get_symbols(grammar):
             terminals.add(x)
     # Remove the non terminals
     terminals = terminals.difference(non_terminals)
+    terminals.add('$')
     return terminals, non_terminals
-
-
-terminals, non_terminals = get_symbols(grammar)
-symbols = terminals.union(non_terminals)
 
 
 def first(symbols):
@@ -68,8 +92,7 @@ def isTerminal(symbol):
 
 def shift_dot(production):
     # This function shifts the dot to the right
-    lhs, rhs = '->'.split(production)
-    print(rhs)
+    lhs, rhs = production.split('->')
     x, y = rhs.split(".")
     if(len(y) == 0):
         # TODO: Improve this part.
@@ -86,17 +109,18 @@ def shift_dot(production):
 def goto(I, X):
     # Function to calculate GOTO
     J = []
-    production, look_ahead = zip(*I)
-    for i in len(I):
-        if not production[i][-1] == '.':
+    for production, look_ahead in I:
+        lhs, rhs = production.split('->')
+        if "."+X in rhs and not rhs[-1] == '.':
             # Check if the production ends with a dot, else shift dot
-            new_prod = shift_dot(production[i])
-            J.append((new_prod, look_ahead[i]))
+            new_prod = shift_dot(production)
+            J.append((new_prod, look_ahead))
     return closure(J)
 
 
 def set_of_items():
     # Function to construct the set of items
+    # TODO: Change it to return a dictionary
     C = closure([('P->.S', '$')])
     for I in C:
         # For each items I in C
@@ -109,3 +133,26 @@ def set_of_items():
                     # Add Goto(I,X) to C
                     C.extend(goto_I_X)
     return C
+
+
+def CLR_construction(grammar):
+    C = set_of_items()
+    # Construction ACTION function
+    pass
+
+
+if __name__ == "__main__":
+
+    # Demo grammars
+    grammar = ['E->TX', 'X->+TX', 'X->e', 'T->FY', 'Y->*FY', 'Y->e', 'F->(E)', 'F->i']
+    grammar = ['S->Cc', 'C->cC', 'C->d']
+    grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
+
+    terminals, non_terminals = get_symbols(grammar)
+    symbols = terminals.union(non_terminals)
+
+    ACTION = pd.DataFrame(columns=terminals)
+    GOTO = pd.DataFrame(columns=non_terminals)
+
+    I = [('P->.S', '$')]
+    I0 = closure(I)

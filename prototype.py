@@ -1,8 +1,10 @@
-grammar = []
+#grammar = ['P->SaD','S->a','D->b']
+
 file = open("grammar.txt", "r")
 for line in file:
     line = line.rstrip()
     grammar.append(line)
+#non_terminals = ['S','D']
 
 
 def closure(I):
@@ -17,7 +19,16 @@ def closure(I):
         lhs, rhs = item.split(nextProduction)
         tempString = ""
         tempString = tempString.join(look_ahead)
-        rhs = rhs + tempString
+        firstVariables = rhs + tempString
+        if nextProduction in non_terminals:
+            lhs, rhs = 0, 0
+            for eachGrammar in grammar:
+                lhs, rhs = eachGrammar.split('->')
+                if lhs == nextProduction:
+                    rhs = '.' + rhs
+                    eachGrammar = "->".join([lhs, rhs])
+                    productions.append(eachGrammar)
+                    look_ahead.append(first(firstVariables))
 
         # firstofproduction = first()
         # productions.append("->".join([lhs, rhs]))
