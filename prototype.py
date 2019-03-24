@@ -33,7 +33,6 @@ def closure(I):
 
     return list(zip(productions, look_ahead))
 
-
 dictionary = {'I0': [('P->.SaD', '$')]}
 I = dictionary['I0']
 closure(I)
