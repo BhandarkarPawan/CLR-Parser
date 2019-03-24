@@ -4,25 +4,28 @@ EPSILON = "e"
 
 
 def get_productions(X):
+    # This function will return all the productions X->A of the grammar
     productions = []
     for prod in grammar:
         lhs, rhs = prod.split('->')
+        # Check if the production has X on LHS
         if lhs == X:
+            # Introduce a dot
             rhs = '.'+rhs
             productions.append('->'.join([lhs, rhs]))
     return productions
 
 
 def closure(I):
+    # This function calculates the closure of the set of items I
     for production, a in I:
+        # This means that the dot is at the end and can be ignored
         if production.endswith("."):
             continue
-        # look_ahead = '|'.split(look_ahead)
         lhs, rhs = production.split('->')
         alpha, B_beta = rhs.split('.')
         B = B_beta[0]
         beta = B_beta[1:]
-        # for a in look_ahead:
         beta_a = beta + a
         first_beta_a = first(beta_a)
         for b in first_beta_a:
@@ -32,59 +35,6 @@ def closure(I):
                 if (new_item not in I):
                     I.append(new_item)
     return I
-
-
-items = dict()
-
-
-def get_productions(X):
-    productions = []
-    for prod in grammar:
-        lhs, rhs = prod.split('->')
-        if lhs == X:
-            rhs = '.'+rhs
-            productions.append('->'.join([lhs, rhs]))
-    return productions
-
-
-def closure(I):
-    for production, a in I:
-        # look_ahead = '|'.split(look_ahead)
-        lhs, rhs = production.split('->')
-        alpha, B_beta = rhs.split('.')
-        B = B_beta[0]
-        beta = B_beta[1:]
-        # for a in look_ahead:
-        beta_a = beta + a
-        first_beta_a = first(beta_a)
-        for b in first_beta_a:
-            B_productions = get_productions(B)
-            for gamma in B_productions:
-                new_item = (gamma, b)
-                if (new_item not in I):
-                    I.append(new_item)
-    return I
-
-
-production, a = 'P->.S', '$'
-'S->.R', '$'
-'R->.L', '$'
-'L->.*R', '$'
-'L->.i', '$'
-
-
-production = 'L->.*R'
-a = '$'
-
-I = [('P->.S', '$')]
-
-grammar = ['S->L=R',
-           'S->R',
-           'L->*R',
-           'L->i',
-           'R->L']
-
-closure(I)
 
 
 def get_symbols(grammar):
@@ -107,11 +57,11 @@ def get_symbols(grammar):
 def first(symbols):
     # Find the first of the symbol 'X' w.r.t the grammar
     final_set = []
-
     for X in symbols:
-        first_set = []  # Will contain the final set first(X)
+        first_set = []  # Will contain the first(X)
         if isTerminal(X):
-            return [X]
+            final_set.extend(X)
+            return final_set
         else:
             for production in grammar:
                 # For each production in the grammar
@@ -122,23 +72,32 @@ def first(symbols):
                         # To find the first of the RHS
                         y = rhs[i]
                         # Check one symbol at a time
+                        if y == X:
+                            # Ignore if it's the same symbol as X
+                            # This avoids infinite recursion
+                            continue
                         first_y = first(y)
                         first_set.extend(first_y)
                         # Check next symbol only if first(current) contains EPSILON
                         if EPSILON in first_y:
-                            first_set.remove(EPSILON)
+                            first_y.remove(EPSILON)
                             continue
                         else:
                             # No EPSILON. Move to next production
                             break
                     else:
                         # All symbols contain EPSILON. Add EPSILON to first(X)
-                        first_set.extend(EPSILON)
-        final_set.extend(first_set)
-    return list(set(final_set))
+                        # Check to see if some previous production has added epsilon already
+                        if EPSILON not in first_set:
+                            first_set.extend(EPSILON)
 
-
-first('YX')
+                        # Move onto next production
+            final_set.extend(first_set)
+            if EPSILON in first_set:
+                continue
+            else:
+                break
+    return final_set
 
 
 def isTerminal(symbol):
@@ -151,7 +110,6 @@ def shift_dot(production):
     lhs, rhs = production.split('->')
     x, y = rhs.split(".")
     if(len(y) == 0):
-        # TODO: Improve this part.
         print("Dot at the end!")
         return
     elif len(y) == 1:
@@ -162,14 +120,12 @@ def shift_dot(production):
     return "->".join([lhs, rhs])
 
 
-shift_dot('P->AB.c')
-
-
 def goto(I, X):
     # Function to calculate GOTO
     J = []
     for production, look_ahead in I:
         lhs, rhs = production.split('->')
+        # Find the productions with .X
         if "."+X in rhs and not rhs[-1] == '.':
             # Check if the production ends with a dot, else shift dot
             new_prod = shift_dot(production)
@@ -177,21 +133,42 @@ def goto(I, X):
     return closure(J)
 
 
-def set_of_items():
+def pending_shifts(I):
+    # This function will check which symbols are to be shifted in I
+    symbols = []  # Will contain the symbols in order of evaluation
+    for production, _ in I:
+        lhs, rhs = production.split('->')
+        if rhs.endswith('.'):
+            # dot is at the end of production. Hence, ignore it
+            continue
+        # beta is the first symbol after the dot
+        beta = rhs.split('.')[1][0]
+        if beta not in symbols:
+            symbols.append(beta)
+    return symbols
+
+
+def set_of_items(display=False):
     # Function to construct the set of items
-    # TODO: Change it to return a dictionary
-    C = closure([('P->.S', '$')])
-    for I in C:
-        # For each items I in C
-        for X in symbols:
-            # For each grammar symbol X
-            goto_I_X = goto(I, X)
-            if not len(goto_I_X) == 0:
-                # If Goto(I,X) is not empty and not in C
-                if goto_I_X not in C:
-                    # Add Goto(I,X) to C
-                    C.extend(goto_I_X)
-    return C
+    num_states = 1
+    states = ['I0']
+    items = {'I0':  closure([('P->.S', '$')])}
+    for I in states:
+        for X in pending_shifts(items[I]):
+            goto_I_X = goto(items[I], X)
+            if len(goto_I_X) > 0 and goto_I_X not in items.values():
+                new_state = "I"+str(num_states)
+                states.append(new_state)
+                items[new_state] = goto_I_X
+                num_states += 1
+    if display:
+        for i in items:
+            print("State", i, ":")
+            for x in items[i]:
+                print(x)
+            print()
+
+    return items
 
 
 def CLR_construction(grammar):
@@ -203,15 +180,24 @@ def CLR_construction(grammar):
 if __name__ == "__main__":
 
     # Demo grammars
-    grammar = ['E->TX', 'X->+TX', 'X->e', 'T->FY', 'Y->*FY', 'Y->e', 'F->(E)', 'F->i']
-    grammar = ['S->Cc', 'C->cC', 'C->d']
-    grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
+    grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
+    # grammar = ['S->CC', 'C->cC', 'C->d']
+    # grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
 
     terminals, non_terminals = get_symbols(grammar)
     symbols = terminals.union(non_terminals)
 
-    ACTION = pd.DataFrame(columns=terminals)
-    GOTO = pd.DataFrame(columns=non_terminals)
+    # ACTION = pd.DataFrame(columns=terminals)
+    # GOTO = pd.DataFrame(columns=non_terminals)
 
-    I = [('P->.S', '$')]
-    I0 = closure(I)
+    # Demonstrating main functions
+    first('L')
+    start = [('P->.S', '$')]
+    I0 = closure(start)
+    goto(I0, '*')
+    C = set_of_items(display=True)
+
+    # Demonstrating helper functions:
+    get_productions('L')
+    shift_dot('L->.*R')
+    pending_shifts(I0)
