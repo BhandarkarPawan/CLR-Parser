@@ -5,6 +5,8 @@ for line in file:
     line = line.rstrip()
     grammar.append(line)
 #non_terminals = ['S','D']
+
+
 def closure(I):
     productions, look_ahead = zip(*I)
     productions = list(productions)
@@ -24,7 +26,7 @@ def closure(I):
                 lhs, rhs = eachGrammar.split('->')
                 if lhs == nextProduction:
                     rhs = '.' + rhs
-                    eachGrammar = "->".join([lhs,rhs])
+                    eachGrammar = "->".join([lhs, rhs])
                     productions.append(eachGrammar)
                     look_ahead.append(first(firstVariables))
 
