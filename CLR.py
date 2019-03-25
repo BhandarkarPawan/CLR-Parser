@@ -180,9 +180,6 @@ def done_shifts(I):
     return done
 
 
-done_shifts(C['I4'])
-
-
 def get_state(C, I):
     # This function returns the State name, given a set of items.
     key_list = list(C.keys())
@@ -230,12 +227,66 @@ def CLR_construction(num_states):
     return ACTION, GOTO
 
 
+string = 'ccd'
+
+
+def parse_string(string, ACTION, GOTO):
+    # This function parses the input string and returns the talble
+    row = 0
+    # Parse table column names:
+    cols = ['Stack', 'Input', 'Output']
+    if not string.endswith('$'):
+        # Append $ if not already appended
+        string = string+'$'
+    ip = 0  # Initialize input pointer
+    # Create an initial (empty) parsing table:
+    PARSE = pd.DataFrame(columns=cols)
+    # Initialize input stack:
+    input = list(string)
+    # Initialize grammar stack:
+    stack = ['$', '0']
+    while True:
+        S = int(stack[-1])  # Stack top
+        a = input[ip]  # Current input symbol
+        action = ACTION.at[S, a]
+        # New row to be added to the table:
+        new_row = ["".join(stack), "".join(input[ip:]), action]
+        if 'Shift' in action:
+            # If it is a shift operation:
+            S1 = action.split()[1]
+            stack.append(a)
+            stack.append(S1)
+            ip += 1
+        elif "Reduce" in action:
+            # If it's a reduce operation:
+            i = int(action.split()[1])-1
+            A, beta = grammar[i].split('->')
+            for _ in range(2*len(beta)):
+                # Remove 2 * rhs of the production
+                stack.pop()
+            S1 = int(stack[-1])
+            stack.append(A)
+            stack.append(str(GOTO.at[S1, A]))
+            # Replace the number with the production for clarity:
+            new_row[-1] = "Reduce "+grammar[i]
+        elif action == "Accept":
+            # Parsing is complete. Return the table
+            PARSE.loc[row] = new_row
+            return PARSE
+        else:
+            # Some conflict occurred.
+            raise Exception
+        # All good. Append the new row and move on to the next.
+        PARSE.loc[row] = new_row
+        row += 1
+
+
 if __name__ == "__main__":
 
     # Demo grammars
     # grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
-    grammar = ['S->CC', 'C->cC', 'C->d']
-    # grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
+    # grammar = ['S->CC', 'C->cC', 'C->d']
+    grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
 
     terminals, non_terminals = get_symbols(grammar)
     symbols = terminals.union(non_terminals)
@@ -252,3 +303,5 @@ if __name__ == "__main__":
     get_productions('L')
     shift_dot('L->.*R')
     pending_shifts(I0)
+
+    PARSE_TABLE = parse_string('i+i', ACTION, GOTO)
