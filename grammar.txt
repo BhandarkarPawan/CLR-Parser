@@ -1,18 +1,23 @@
-S'->S
-S->int A
-A->main l_para r_para NL B N return 0 SC NL E
-A->main l_para r_para NL B C return v SC NL E
-B->begin NL
-E->end
-N->null
-C->int v SC NL D NL
-D->do NL X Y NL while l_para Q r_para SC
-X->Q opq Q opp Q SC NL
-Q->expr
-opq->=
-opp->+
-Y->v opq Q SC
-SC->;
-l_para->(
-r_para->)
-NL->\n
+S -> type main(args) \n body return var;
+
+args->list
+args->e
+
+list->var,list
+list->var
+
+body->statement \n body
+body->statement \n
+
+statement->declaration;
+statement->switch_stmt
+statement->printf(operation);
+
+declaration->type list;
+
+operation->var op operation
+operation->var
+
+switch_stmt->switch(var) \n begin \n case_stmt \n end
+case_stmt->case 'op': \n body break; \n case_stmt
+case_stmt->case 'op': \n body break;

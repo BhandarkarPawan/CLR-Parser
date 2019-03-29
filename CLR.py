@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from lexer import get_tokens
 
 EPSILON = "e"
 
@@ -275,10 +276,20 @@ def parse_string(string, ACTION, GOTO):
             return PARSE
         else:
             # Some conflict occurred.
+
+            print("S,a = ", S, a)
             raise Exception
         # All good. Append the new row and move on to the next.
         PARSE.loc[row] = new_row
         row += 1
+
+
+def get_grammar(filename):
+    grammar = []
+    F = open(filename, "r")
+    for production in F:
+        grammar.append(production[:-1])
+    return grammar
 
 
 if __name__ == "__main__":
@@ -286,22 +297,21 @@ if __name__ == "__main__":
     # Demo grammars
     # grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
     # grammar = ['S->CC', 'C->cC', 'C->d']
-    grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
-
+    # grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
+    grammar = get_grammar("grammarSmall.txt")
     terminals, non_terminals = get_symbols(grammar)
     symbols = terminals.union(non_terminals)
 
     # Demonstrating main functions
-    first('L')
     start = [('P->.S', '$')]
     I0 = closure(start)
     goto(I0, '*')
-    C = set_of_items()
+    C = set_of_items(display=True)
     ACTION, GOTO = CLR_construction(num_states=len(C))
 
     # Demonstrating helper functions:
     get_productions('L')
     shift_dot('L->.*R')
     pending_shifts(I0)
-
-    PARSE_TABLE = parse_string('i+i', ACTION, GOTO)
+    string = "".join(get_tokens("Prog"))
+    PARSE_TABLE = parse_string(string, ACTION, GOTO)

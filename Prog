@@ -1,6 +1,6 @@
-int main()  
+int main(0)
     char operator;
-    int firstNumber ,secondNumber;
+    int firstNumber,secondNumber;
 
     switch(operator)
     begin
@@ -11,6 +11,5 @@ int main()
         case '-':
             printf(firstNumber-secondNumber);
             break;
-         end 
-  return 0;      
-
+         end
+  return 0;

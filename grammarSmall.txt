@@ -1,0 +1,15 @@
+S->tm(A)Brv;
+A->L
+L->v,L
+L->v
+B->MB
+B->M
+M->D;
+M->W
+M->p(O);
+D->tL;
+O->voO
+O->v
+W->w(v)bCd
+C->c'o':Bk;C
+C->c'o':Bk;
