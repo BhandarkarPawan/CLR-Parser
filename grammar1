@@ -7,7 +7,7 @@ B->M
 M->D;
 M->W
 M->p(O);
-D->tL;
+D->tL
 O->voO
 O->v
 W->w(v)bCd

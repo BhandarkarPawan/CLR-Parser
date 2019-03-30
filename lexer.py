@@ -15,10 +15,12 @@ KEYWORDS = {'t': ['int', 'char'],
             'd': ['end'],
             'r': ['return'],
             's': [' '],
-            'o': ['+', '-'],
-            'n': ['\n']}
+            'o': ['+', '-', '='],
+            'n': ['\n'],
+            'q': ['do'],
+            'l': ['while']}
 
-OPERATORS = ['+', '-']
+OPERATORS = ['+', '-', '=']
 line_count = 0
 
 

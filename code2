@@ -1,0 +1,9 @@
+int main()
+begin
+int n;
+do
+  expr=expr+expr;
+  n=expr;
+while(expr);
+return n;
+end

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from lexer import get_tokens
 
+get_tokens("code.txt")
 EPSILON = "e"
 
 
@@ -228,9 +229,6 @@ def CLR_construction(num_states):
     return ACTION, GOTO
 
 
-string = 'ccd'
-
-
 def parse_string(string, ACTION, GOTO):
     # This function parses the input string and returns the talble
     row = 0
@@ -252,13 +250,13 @@ def parse_string(string, ACTION, GOTO):
         action = ACTION.at[S, a]
         # New row to be added to the table:
         new_row = ["".join(stack), "".join(input[ip:]), action]
-        if 'Shift' in action:
+        if 'S' in action:
             # If it is a shift operation:
             S1 = action.split()[1]
             stack.append(a)
             stack.append(S1)
             ip += 1
-        elif "Reduce" in action:
+        elif "R" in action:
             # If it's a reduce operation:
             i = int(action.split()[1])-1
             A, beta = grammar[i].split('->')
@@ -278,6 +276,7 @@ def parse_string(string, ACTION, GOTO):
             # Some conflict occurred.
 
             print("S,a = ", S, a)
+            print(PARSE)
             raise Exception
         # All good. Append the new row and move on to the next.
         PARSE.loc[row] = new_row
@@ -298,7 +297,8 @@ if __name__ == "__main__":
     # grammar = ['S->S+T', 'S->T', 'T->T*F', 'T->F', 'F->(S)', 'F->i']
     # grammar = ['S->CC', 'C->cC', 'C->d']
     # grammar = ['S->L=R', 'S->R', 'L->*R', 'L->i', 'R->L']
-    grammar = get_grammar("grammarSmall.txt")
+    grammar = get_grammar("grammar2")
+    # grammar = ['S->AB', 'A->aB', 'S->A', 'A->B', 'B->C', 'C->d']
     terminals, non_terminals = get_symbols(grammar)
     symbols = terminals.union(non_terminals)
 
@@ -313,5 +313,5 @@ if __name__ == "__main__":
     get_productions('L')
     shift_dot('L->.*R')
     pending_shifts(I0)
-    string = "".join(get_tokens("Prog"))
+    string = "".join(get_tokens("code2"))
     PARSE_TABLE = parse_string(string, ACTION, GOTO)

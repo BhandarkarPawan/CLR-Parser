@@ -8,8 +8,8 @@ int main(0)
             printf(firstNumber+secondNumber);
             break;
 
-        case '-':
-            printf(firstNumber-secondNumber);
-            break;
+    case '-':
+        printf(firstNumber-secondNumber);
+        break;
          end
   return 0;
