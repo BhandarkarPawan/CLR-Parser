@@ -1,4 +1,4 @@
-S->tm(A)Brv;
+S->tm()Brv;
 A->L
 L->v,L
 L->v
